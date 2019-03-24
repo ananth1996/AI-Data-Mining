@@ -1,10 +1,9 @@
-# Dont modify the import statements!
-import itertools 
+#%% Dont modify the import statements!
+import itertools
 from helpers import all_but_one, make_large_one_item_sets
 from subsetTree import SubsetTree
 
-
-# APRIORI-GEN: Generate itemset candidates of length (N + 1)
+#%% APRIORI-GEN: Generate itemset candidates of length (N + 1)
 def apriori_gen(L_prev, N=1):
     # INPUT:
     #   - L_prev    :   (set()) large itemsets of length N
@@ -24,28 +23,42 @@ def apriori_gen(L_prev, N=1):
         extension_candidates = prev_itemset_list[i + 1:]
         # ============= TODO: ========================
         # See chapter 9.2 for AprioriGen() details
-        #   
+        #
         # Your implementation should:
-        # 
-        # 1. Go over all itemsets in L_prev and join 
-        # them together if they share all but 1 item. 
+        #
+        # 1. Go over all itemsets in L_prev and join
+        # them together if they share all but 1 item.
         #   - Combined itemsets should be sorted
         #
-        # 2. If two lists can be combined, make sure that 
+        # 2. If two lists can be combined, make sure that
         # all possible subsets of length N are found in L_prev.
-        # if all subsets are contained in L_prev, add the combined 
+        # if all subsets are contained in L_prev, add the combined
         # item to L_next
-        #   
-        # 3. As L_next is a set, we cannot use lists. Instead use a tuple() 
+        #
+        # 3. As L_next is a set, we cannot use lists. Instead use a tuple()
         #   - if you use all_but_one() it already returns sorted tuples that can be used for itemset candidates
-        # 
+        #
         # Hints:
         #   - use all_but_one(A, B) to combine two lists A, B
         #       - all_but_one returns combined tuple if A, B share all but 1 item, else it returns None
         #       - output itemset is already sorted
         #
-        #   - You can use: list(itertools.combinations(itemset, N)) to get all subsets of length N 
+        #   - You can use: list(itertools.combinations(itemset, N)) to get all subsets of length N
         #       - itemset is iteraple: this can be output of all_but_one(..)
+        for candidate in extension_candidates:
+            join = all_but_one(query,candidate)
+            if join is None:
+                continue
+            flag =False 
+            for subset in itertools.combinations(join,N):
+                if subset not in L_prev:
+                    flag = True
+                    break
+            if flag:
+                continue
+            L_next.add(join)
+            
+
     return L_next
 
 
@@ -61,7 +74,7 @@ def large_itemsets(transactions, min_support=0.001):
     level = 1
     itemsets = {}
     d = len(transactions)
-    
+
     # Start with itemsets where each item is it's own itemset
     # make_large_one_item_sets returns:
     #   - L_prev : set of length one itemsets
@@ -79,48 +92,54 @@ def large_itemsets(transactions, min_support=0.001):
 
         # ============= TODO: ========================
         # See chapter 9.2 for Apriori() algorithm details
-        #   
+        #
         # Your implementation should:
-        # 
+        #
         # 1. Go over all the transactions and for each single transaction
-        # find all itemsets in C_K that are subset of the transaction. increment 
-        # count for all such subsets. 
-        # 
+        # find all itemsets in C_K that are subset of the transaction. increment
+        # count for all such subsets.
+        #
         # Hints:
         #   - You want to use: subsetTree - class to find subsets more efficient
         #       - Tree is constructed above
         #       - tree.subset(transaction) returns a iterable over all subsets that you can for loop over
         #       - Tree leafs contain support-count and itemset parameters
         #
-        #   - if you are looping over the found subsets you can use 
+        #   - if you are looping over the found subsets you can use
         #       - itemset.increment_support() to raise count of a itemset
-        #    
+        #
         # ============================================
-
+        for transaction in transactions:
+            for subset in tree.subset(transaction):
+                subset.increment_support()
+        
         # Pass only valid item(sets)
         level += 1
         L_prev = set()
         itemsets[level] = set()
         for large_item_candidate in tree.fetch_candidate_itemsets():
+            if large_item_candidate.get_support_count() >= d*min_support:
+                L_prev.add(large_item_candidate.itemset)
+                itemsets[level].add(large_item_candidate)
             # ============= TODO: ========================
             # See chapter 9.2 for Apriori() algorithm details
             #
             # Your implementation should:
-            # 
+            #
             # 1. Go over all generated subsets of C_K and pass only itemsets to next level
             # where itemset has count over (d * min_support).
-            # 
+            #
             # 2. If a itemset is approved as frequent, you should
             #       - Add only the itemset tuple to L_prev as we make the new itemset based on these
-            #       - Add the leaf-itemlarge_item_candidate to dictionary itemsets[level] 
+            #       - Add the leaf-itemlarge_item_candidate to dictionary itemsets[level]
             #         as we want to store the itemset and the support count
-            #   
+            #
             #  Hints:
             #   - All generated itemsets are stored in tree and are iterated over with tree.fetch_candidate_itemsets
             #   - large_item_candidate is a Leaf item with attributes
             #       - itemset : itemset candidate as a tuple
             #       - support : total count of support for the candidate
-            pass # Remove this line!
+            #pass # Remove this line!
             # ============================================
             
     return itemsets
@@ -149,23 +168,23 @@ def find_association_rules(itemsets, support_count_dictionary, min_confidence_ra
         support_l = support_count_dictionary[itemset]
 
         for i in range(1, len(itemset)):
-            # Get all subsets with length i of itemset. 
+            # Get all subsets with length i of itemset.
             # Remember that as the itemset is frequent, also all subsets of it are frequent
             iter_combinations = list(itertools.combinations(itemset, i))
             # ============= TODO: ========================
             # See chapter 9.3 for details on mining association rules
-            # 
+            #
             # After finding all frequent itemsets, we want to find association rules for recommending individual items
-            #   
+            #
             # Your implementation should:
-            #   
+            #
             #  let I be the frequent itemset and S be some non-empty subset
             #
             #  1. Go over all possible subsets of frequent itemset
             #  2. If support(I) / support(S) >= min_confidence_ratio
             #       - Make new item instance of recommendation(..) class
             #           - takes inputs: body, head, confidence
-            #       - Append the recommendation to recommendations list 
+            #       - Append the recommendation to recommendations list
             #
             #  Hints:
             #       - support_count_dictionary contains mapping from frequent itemset-tuple to its support count
@@ -173,5 +192,4 @@ def find_association_rules(itemsets, support_count_dictionary, min_confidence_ra
             #
             # ============================================
     return recommendations
-
 
