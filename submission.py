@@ -191,5 +191,11 @@ def find_association_rules(itemsets, support_count_dictionary, min_confidence_ra
             #           - support_count_dictionary[itemset] : itemset should be sorted
             #
             # ============================================
-    return recommendations
+            for subset in iter_combinations:
+                supp_s = support_count_dictionary[tuple(sorted(subset))]
+                confidence = support_l/supp_s
+                body = set(itemset)-set(subset)
+                if confidence >= min_confidence_ratio:
+                        recommendations.append(recommendation(body=subset,head=body,confidence=confidence))
+    return recommendations  
 
